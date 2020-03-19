@@ -1,0 +1,19 @@
+{
+  "name": "webot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/king90/webot.git"
+  },
+  "author": "Will",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/king90/webot/issues"
+  },
+  "homepage": "https://github.com/king90/webot#readme"
+}
