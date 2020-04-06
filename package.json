@@ -1,19 +1,40 @@
 {
-  "name": "webot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/king90/webot.git"
-  },
-  "author": "Will",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/king90/webot/issues"
-  },
-  "homepage": "https://github.com/king90/webot#readme"
+    "name": "webot",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "node dist/index",
+        "start": "npm run dev",
+        "compile": "tsc -p ./",
+        "lint": "eslint src --ext ts",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "test:db": "node dist/test/rule.test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/king90/webot.git"
+    },
+    "author": "Will",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/king90/webot/issues"
+    },
+    "homepage": "https://github.com/king90/webot#readme",
+    "devDependencies": {
+        "@types/lowdb": "^1.0.9",
+        "@types/raven": "^2.5.3",
+        "@typescript-eslint/eslint-plugin": "^2.24.0",
+        "@typescript-eslint/parser": "^2.24.0",
+        "eslint": "^6.8.0",
+        "typescript": "^3.8.3"
+    },
+    "dependencies": {
+        "dayjs": "^1.8.23",
+        "lowdb": "^1.0.0",
+        "node-schedule": "^1.3.2",
+        "qrcode-terminal": "^0.12.0",
+        "wechaty": "^0.32.5"
+    }
 }

@@ -1,0 +1,85 @@
+[{
+    "id": "1",
+    "name": "",
+    "keywords": "test",
+    "enable": 1,
+    "createTime": "",
+    "updateTime": "",
+    "creatBy": "",
+    "isSchedule": "",
+    "scheduleTime": "",
+    "allow": {
+        "group": ["火线三兄弟"],
+        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+    },
+    "ignore": {
+        "group": [],
+        "person": []
+    },
+    "handler": [{
+        "name": "addRecord"
+    }]
+}, {
+    "id": "2",
+    "name": "",
+    "keywords": "addRule",
+    "enable": 1,
+    "createTime": "",
+    "updateTime": "",
+    "creatBy": "",
+    "isSchedule": "",
+    "scheduleTime": "",
+    "allow": {
+        "group": [],
+        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+    },
+    "ignore": {
+        "group": [],
+        "person": []
+    },
+    "handler": [{
+        "name": "addRule"
+    }]
+}, {
+    "id": "3",
+    "name": "",
+    "keywords": "updateRule",
+    "enable": 1,
+    "createTime": "",
+    "updateTime": "",
+    "creatBy": "",
+    "isSchedule": "",
+    "scheduleTime": "",
+    "allow": {
+        "group": [],
+        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+    },
+    "ignore": {
+        "group": [],
+        "person": []
+    },
+    "handler": [{
+        "name": "updateRule"
+    }]
+}, {
+    "id": "4",
+    "name": "",
+    "keywords": "deleteRule",
+    "enable": 1,
+    "createTime": "",
+    "updateTime": "",
+    "creatBy": "",
+    "isSchedule": "",
+    "scheduleTime": "",
+    "allow": {
+        "group": [],
+        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+    },
+    "ignore": {
+        "group": [],
+        "person": []
+    },
+    "handler": [{
+        "name": "deleteRule"
+    }]
+}]
