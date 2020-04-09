@@ -29,9 +29,7 @@ const handler: any = {
     autoReply(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
             console.log('[index.ts/31] autoReply ');
-            const result = await ReplyHandler.autoReply(data).catch(() => {
-                reject();
-            });
+            const result = await ReplyHandler.autoReply(data);
             resolve(result);
         });
     },
