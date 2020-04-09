@@ -5,7 +5,7 @@ import { MessageHandlerOptions } from './message';
 
 const TABLE_RULE = db.TB_RULE;
 
-enum RuleEnableEnum {
+export enum RuleEnableEnum {
     INIT = 0,
     ACTIVE,
     REMOVE,
@@ -14,6 +14,9 @@ enum RuleEnableEnum {
 }
 
 function createHandler(data: MessageHandlerOptions) {
+    if (data.handler) {
+        return data.handler;
+    }
     let handler;
     let replyData = data.reply;
     if (replyData && replyData.type === 'text') {
@@ -38,13 +41,13 @@ export default {
             let handler = createHandler(data);
 
             model.push({
-                id: size++,
+                id: `${size + 2}`,
                 name: "",
                 keywords: data.keywords,
                 enable: data.enable,
                 createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                 updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                from: contact ? contact.id : undefined,
+                from: contact ? contact.name() : undefined,
                 enableSchedule: data.enableSchedule,
                 scheduleTime: data.scheduleTime,
                 allow: data.allow,
@@ -89,11 +92,12 @@ export default {
         });
     },
 
-    pauseRule(id: string) {
+    pauseRule(keywords: string) {
         return new Promise(async (resolve, reject) => {
             const instance = await db.instance;
+            console.log('[rule.ts/98] pauseRule find value: ', instance.get(TABLE_RULE).find({ keywords }).value());
             instance.get(TABLE_RULE)
-                .find({ id })
+                .find({ keywords: keywords })
                 .assign({
                     enable: RuleEnableEnum.PAUSE,
                     updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
@@ -102,11 +106,12 @@ export default {
         });
     },
 
-    activeRule(id: string) {
+    activeRule(keywords: string) {
         return new Promise(async (resolve, reject) => {
             const instance = await db.instance;
+            console.log('[rule.ts/112] activeRule find value: ', instance.get(TABLE_RULE).find({ keywords }).value());
             instance.get(TABLE_RULE)
-                .find({ id })
+                .find({ keywords })
                 .assign({
                     enable: RuleEnableEnum.REACTIVE,
                     updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss')
@@ -117,10 +122,16 @@ export default {
 
     findRule(keyword: string | Array<string>) {
         return new Promise(async (resolve, reject) => {
+            console.log('[rule.ts/125] findRule: ', keyword);
+            if (keyword === undefined) {
+                reject('查询关键字不能为空');
+                return;
+            }
             const instance = await db.instance;
             const result = instance.get(TABLE_RULE)
                 .find({ keywords: keyword })
                 .value();
+            console.log('[rule.ts/130] findRule result: ', result);
             resolve(result);
         });
     }

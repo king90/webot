@@ -30,6 +30,7 @@ async function onMessage(msg: Message) {
             return;
         }
     
+        console.log('[message.ts/33] parsedMsg: ', parsedMsg);
         // 记录user
         let contact: Contact | null = msg.from();
         if (contact) {
@@ -49,7 +50,7 @@ async function onMessage(msg: Message) {
             }).value();
         }
 
-        console.log('[message.ts/24] findRule: ', findRule);
+        console.log('[message.ts/53] findRule: ', findRule);
 
         if (!findRule) {
             return;
@@ -67,16 +68,26 @@ async function onMessage(msg: Message) {
 }
 
 
-async function replyMessage(msg: Message, text: any, replyUser?: string) {
+async function replyMessage(msg: Message, text: any) {
+    if (text === undefined) {
+        return;
+    }
+    let result = isObject(text) ? JSON.stringify(text, null, 2) : text;
+    
+    await delay(random());
+    await msg.say(result);
+}
+
+async function replyMessageInRoom(room: Room, text: any, replyUser?: string) {
     if (text === undefined) {
         return;
     }
     let result = isObject(text) ? JSON.stringify(text, null, 2) : text;
     if (replyUser !== undefined) {
-        result = `@${replyUser}，\n${result}`;
+        result = `@${replyUser}，<br/>${result}`;
     }
     await delay(random());
-    await msg.say(result);
+    await room.say(result);
 }
 
 /**
@@ -107,7 +118,8 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
     });
     
     let allow = rule.allow.person || [];
-    if (!allow.includes(contact.id)) {
+    if (!allow.includes(nickName)) {
+        console.log('[message.ts/112] not allow: ');
         return;
     }
 
@@ -115,6 +127,7 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
     // TODO: 未来可扩展到多个任务
     let currentHandle = rule.handler[0] || {};
     let execute = handler.get(currentHandle.name);
+    console.log('[message.ts/120] execute: ', execute);
     if (execute) {
         let result: any = await execute(newMsg);
         console.log('[message.ts/83] result: ', result);
@@ -153,18 +166,21 @@ async function onWebRoomMessage(newMsg: MessageHandlerOptions, rule: any) {
         console.log(err);
     });
 
-    if (!allow.includes(room.id) || !allow.includes(roomPayload.topic)) {
+    if (!allow.includes(room.id) && !allow.includes(roomPayload.topic)) {
+        console.log('[message.ts/160] not allow: ');
         return;
     }
+
 
     const nickName = payload.name;
     // TODO: 未来可扩展到多个任务
     let currentHandle: any = rule.handler[0] || {};
-    let execute = handler[currentHandle.name];
+    let execute = handler.get(currentHandle.name);
+    console.log('[message.ts/168] execute: ', execute);
     if (execute) {
-        let result: any = await execute(content);
+        let result: any = await execute(newMsg);
         console.log('[message.ts/83] result: ', result);
-        await replyMessage(msg, result, nickName);
+        await replyMessageInRoom(room, result, nickName);
     }
 }
 

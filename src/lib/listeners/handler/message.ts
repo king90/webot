@@ -47,7 +47,7 @@ export interface MessageHandlerOptions {
         group?: Array<string>,
         person?: Array<string>
     },
-    handler?: Array<{name: string, data: any}> | string,
+    handler?: Array<{name: string, data?: any}> | string,
     reply?: {
         type: MessageHandlerReplyEnum,
         data: string | Array<string> | undefined
@@ -72,7 +72,17 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
         return undefined;
     }
 
-    let result: MessageHandlerOptions = { keywords: '', msg: msg };
+    let allowPerson = msg.from()?.name();
+
+    let result: MessageHandlerOptions = {
+        keywords: '',
+        enableSchedule: false,
+        enable: RuleEnableEnum.ACTIVE,
+        allow: {
+            person: allowPerson ? [allowPerson] : []
+        },
+        msg: msg
+    };
 
     result.ruleName = trim(textList[0]);
     if (!result.ruleName) {
@@ -83,10 +93,12 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
     for (let i = 1; i < textList.length; i++) {
         let item = textList[i];
         let itemList = [];
-        if (!/\s+/.test(item)) {
+        if (!/^\s+/.test(item)) {
             itemList = item.split(/[:：]/);
             let matchKey = itemList[0];
             let matchVal = trim(itemList[1]);
+            console.log('[message.ts/100] matchKey: ', matchKey);
+            console.log('[message.ts/100] matchKey=== handler: ', matchKey === 'handler');
             if (['关键字', 'keyword'].includes(matchKey)) {
                 result.keywords = matchVal === undefined ? '' : matchVal;
             } else if (matchKey === '是否定时') {
@@ -98,15 +110,24 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
                 result.allow.group = matchVal ? matchVal.split(/[,，]/) : undefined;
             } else if (matchKey === '允许人') {
                 result.allow = result.allow || {};
-                result.allow.person = matchVal ? matchVal.split(/[,，]/) : undefined;
+                if (matchVal) {
+                    result.allow.person?.concat(matchVal.split(/[,，]/));
+                }
+            } else if (['handler', '处理'].includes(matchKey)) {
+                console.log('[message.ts/115] matchVal: ', matchVal);
+                if (matchVal) {
+                    result.handler = [{ name: `${matchVal}` }];
+                }
             } else if (matchKey === '回复') {
                 type = 'reply';
                 result.reply = {
                     type: MessageHandlerReplyEnum.TEXT,
-                    data: textList.slice(i + 1)
+                    data: textList.slice(i + 1).join('<br/>')
                 };
             }
             continue;
+        } else {
+            console.log('[message.ts/130] item: ', item);
         }
     }
     return !result.keywords ? undefined : result;
@@ -116,9 +137,12 @@ const parseSingleLineMsg = (text: string, msg: Message): MessageHandlerOptions |
     let textList = text.split(/\s+/);
     let result: MessageHandlerOptions = { keywords: '', msg: msg };
 
-    result.keywords = textList[0];
+    if (textList.length > 0) {
+        result.ruleName = textList[0] === '-' ? undefined : textList[0];
+        result.keywords = textList[1];
+    }
 
-    return !result.keywords ? undefined : result;
+    return !result.keywords && !result.ruleName ? undefined : result;
 };
 
 export default {

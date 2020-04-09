@@ -8,20 +8,30 @@ const handler: any = {
     get(name: string) {
         let mapping: any = {
             'add rule': 'addRule',
+            'add-rule': 'addRule',
             'update rule': 'updateRule',
+            'update-rule': 'updateRule',
             'remove rule': 'deleteRule',
+            'remove-rule': 'deleteRule',
             'active rule': 'activeRule',
+            'active-rule': 'activeRule',
             'pause rule': 'pauseRule',
+            'pause-rule': 'pauseRule',
             'auto reply': 'autoReply',
             'auto-reply': 'autoReply',
+            
         };
+        console.log('[index.ts/18] handler.get(): ');
         
-        return mapping[name] ? this.mapping[name] : this[name];
+        return mapping[name] ? this[mapping[name]] : this[name];
     },
 
     autoReply(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            const result = await ReplyHandler.autoReply(data);
+            console.log('[index.ts/31] autoReply ');
+            const result = await ReplyHandler.autoReply(data).catch(() => {
+                reject();
+            });
             resolve(result);
         });
     },
@@ -29,8 +39,8 @@ const handler: any = {
     addRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
             let findRule: any = await RuleHandler.findRule(data.keywords);
-            if (findRule) {
-                RuleHandler.addRule(data);
+            if (!findRule) {
+                let result = await RuleHandler.addRule(data);
                 resolve('添加成功');
                 return;
             }
@@ -42,7 +52,7 @@ const handler: any = {
         return new Promise(async (resolve, reject) => {
             let findRule: any = await RuleHandler.findRule(data.keywords);
             if (findRule) {
-                RuleHandler.updateRule(findRule.id, data);
+                await RuleHandler.updateRule(findRule.id, data);
                 resolve('更新成功');
                 return;
             }
@@ -52,6 +62,7 @@ const handler: any = {
 
     pauseRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
+            console.log('[index.ts/57] pauseRule: ');
             let keywords = Array.isArray(data.keywords) ? data.keywords[0] : data.keywords;
             let result = await RuleHandler.pauseRule(keywords);
             resolve(result);
