@@ -1,3 +1,4 @@
+import * as dayjs from 'dayjs';
 import db from '../../db';
 
 const TABLE_USER = db.TB_USER;
@@ -20,7 +21,7 @@ export default {
             const instance = await db.instance;
             const result = instance.get(TABLE_USER)
                 .find({ id })
-                .assign({ name })
+                .assign({ name, updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss') })
                 .write();
             resolve(result);
         });
@@ -34,7 +35,7 @@ export default {
             }
             const instance = await db.instance;
             const result = instance.get(TABLE_USER)
-                .push({ id, name })
+                .push({ id, name, updatTime: dayjs().format('YYYY-MM-DD HH:mm:ss')})
                 .write();
             resolve(result);
         });

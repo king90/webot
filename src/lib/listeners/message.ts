@@ -1,6 +1,7 @@
 import { Message, Wechaty, Contact, FileBox, Room } from 'wechaty';
 import * as path from 'path';
-import db from '../db';
+// import db from '../db';
+import RuleDB from '../db/rule';
 import handler from './handler';
 import MessageHandler, { MessageHandlerOptions } from './handler/message';
 import UserHandler from './handler/user';
@@ -23,13 +24,13 @@ async function onMessage(msg: Message) {
     if (isText) {
         console.log('[message.ts/21] msg.text().trim(): ', msg.text().trim());
 
-        const instance = await db.instance;
-        
-        let parsedMsg: MessageHandlerOptions | undefined = MessageHandler.parse(msg);
+        // const instance = await db.instance;
+        const selfName = bot.userSelf().name();
+        let parsedMsg: MessageHandlerOptions | undefined = MessageHandler.parse(msg, selfName);
         if (!parsedMsg) {
             return;
         }
-    
+
         console.log('[message.ts/33] parsedMsg: ', parsedMsg);
         // 记录user
         let contact: Contact | null = msg.from();
@@ -37,27 +38,26 @@ async function onMessage(msg: Message) {
             UserHandler.saveOrUpdate(contact.id, contact.name());
         }
         
-        let ruleModel = instance.get(db.TB_RULE) as any;
+        let ruleModel = await RuleDB.getInstance() as any;
 
         let findRule;
         if (parsedMsg.ruleName) {
             findRule = ruleModel.find({
-                keywords: parsedMsg.ruleName
+                keyword: parsedMsg.ruleName
             }).value();
         } else {
             findRule = ruleModel.find({
-                keywords: parsedMsg.keywords
+                keyword: parsedMsg.keyword
             }).value();
         }
 
         console.log('[message.ts/53] findRule: ', findRule);
 
-        if (!findRule) {
-            return;
-        }
-
         const room: Room | null = msg.room(); // 是否是群消息
         if (room) {//处理群消息
+            if (!findRule) {
+                return;
+            }
             console.log('[message.ts/33] room: ', room);
             await onWebRoomMessage(parsedMsg, findRule);
         } else {
@@ -82,9 +82,9 @@ async function replyMessageInRoom(room: Room, text: any, replyUser?: string) {
     if (text === undefined) {
         return;
     }
-    let result = isObject(text) ? JSON.stringify(text, null, 2) : text;
+    let result = isObject(text) ? `<br/>${JSON.stringify(text, null, 2)}` : text;
     if (replyUser !== undefined) {
-        result = `@${replyUser}，<br/>${result}`;
+        result = `@${replyUser} ${result}`;
     }
     await delay(random());
     await room.say(result);
@@ -116,6 +116,11 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
     }).catch((err: any) => {
         console.log(err);
     });
+
+    if (!rule) {
+        await replyMessage(msg, '没找到对应任务');
+        return;
+    }
     
     let allow = rule.allow.person || [];
     if (!allow.includes(nickName)) {
@@ -123,14 +128,18 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
         return;
     }
 
-
     // TODO: 未来可扩展到多个任务
     let currentHandle = rule.handler[0] || {};
     let execute = handler.get(currentHandle.name);
     console.log('[message.ts/120] execute: ', execute);
     if (execute) {
-        let result: any = await execute(newMsg);
-        console.log('[message.ts/83] result: ', result);
+        let result: any;
+        try {
+            result = await execute(newMsg);
+            console.log('[message.ts/136] result: ', result);
+        } catch (error) {
+            result = error.toString();
+        }
         await replyMessage(msg, result);
     }
 }
@@ -171,6 +180,11 @@ async function onWebRoomMessage(newMsg: MessageHandlerOptions, rule: any) {
         return;
     }
 
+    if (!newMsg.mentionSelf) {
+        console.log('[message.ts/176] no mention self, so dismiss: ');
+        return;
+    }
+
 
     const nickName = payload.name;
     // TODO: 未来可扩展到多个任务
@@ -178,8 +192,13 @@ async function onWebRoomMessage(newMsg: MessageHandlerOptions, rule: any) {
     let execute = handler.get(currentHandle.name);
     console.log('[message.ts/168] execute: ', execute);
     if (execute) {
-        let result: any = await execute(newMsg);
-        console.log('[message.ts/83] result: ', result);
+        let result: any;
+        try {
+            result = await execute(newMsg);
+            console.log('[message.ts/195] result: ', result);
+        } catch (error) {
+            result = error.toString() || '操作失败';
+        }
         await replyMessageInRoom(room, result, nickName);
     }
 }

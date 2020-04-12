@@ -35,7 +35,7 @@ export enum MessageHandlerReplyEnum {
 }
 export interface MessageHandlerOptions {
     ruleName?: string,
-    keywords: string | Array<string>,
+    keyword: string,
     enable?: number,
     enableSchedule?: boolean,
     scheduleTime?: string,
@@ -52,6 +52,7 @@ export interface MessageHandlerOptions {
         type: MessageHandlerReplyEnum,
         data: string | Array<string> | undefined
     },
+    mentionSelf: boolean,
     msg: Message
 }
 
@@ -75,7 +76,8 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
     let allowPerson = msg.from()?.name();
 
     let result: MessageHandlerOptions = {
-        keywords: '',
+        keyword: '',
+        mentionSelf: false,
         enableSchedule: false,
         enable: RuleEnableEnum.ACTIVE,
         allow: {
@@ -100,7 +102,7 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
             console.log('[message.ts/100] matchKey: ', matchKey);
             console.log('[message.ts/100] matchKey=== handler: ', matchKey === 'handler');
             if (['关键字', 'keyword'].includes(matchKey)) {
-                result.keywords = matchVal === undefined ? '' : matchVal;
+                result.keyword = matchVal === undefined ? '' : matchVal;
             } else if (matchKey === '是否定时') {
                 result.enableSchedule = matchVal === '是' ? true : false;
             } else if (matchKey === '定时时间') {
@@ -130,23 +132,28 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
             console.log('[message.ts/130] item: ', item);
         }
     }
-    return !result.keywords ? undefined : result;
+    return !result.keyword ? undefined : result;
 };
 
 const parseSingleLineMsg = (text: string, msg: Message): MessageHandlerOptions | undefined => {
     let textList = text.split(/\s+/);
-    let result: MessageHandlerOptions = { keywords: '', msg: msg };
+    console.log('[message.ts/138] textList: ', textList);
+    
+    let result: MessageHandlerOptions = { keyword: '', mentionSelf: false, msg: msg };
 
-    if (textList.length > 0) {
+    if (textList.length === 1) {
+        result.keyword = textList[0];
+    } else if (textList.length === 2) {
         result.ruleName = textList[0] === '-' ? undefined : textList[0];
-        result.keywords = textList[1];
+        result.keyword = textList[1];
     }
+    console.log('[message.ts/150] result: ', result);
 
-    return !result.keywords && !result.ruleName ? undefined : result;
+    return !result.keyword && !result.ruleName ? undefined : result;
 };
 
 export default {
-    parse(msg: Message): MessageHandlerOptions | undefined {
+    parse(msg: Message, selfName: string): MessageHandlerOptions | undefined {
 
         let isText = msg.type() === Message.Type.Text;
         if (!isText) {
@@ -157,12 +164,24 @@ export default {
         if (!text) {
             return undefined;
         }
+
+        let reg = new RegExp(`^@${selfName}\\s+`);
+        let mentionSelf: boolean = false;
+        if (reg.test(text)) {
+            mentionSelf = true;
+            text = text.replace(reg, '');
+        }
         
         let result;
         if (isMultiLineMsg(text)) {
+            console.log('[message.ts/163] multi line msg: ');
             result = parseMultiLineMsg(text, msg);
         } else {
+            console.log('[message.ts/163] signle msg: ');
             result = parseSingleLineMsg(text, msg);
+        }
+        if (result) {
+            result.mentionSelf = mentionSelf;
         }
         return result;
     }

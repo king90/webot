@@ -3,6 +3,7 @@ import db from '../../db';
 import RuleHandler from './rule';
 import ReplyHandler from './reply';
 import { MessageHandlerOptions } from './message';
+import Logger from '../../db/logger';
 
 const handler: any = {
     get(name: string) {
@@ -36,54 +37,54 @@ const handler: any = {
 
     addRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            let findRule: any = await RuleHandler.findRule(data.keywords);
+            let findRule: any = await RuleHandler.findRule(data.keyword);
             if (!findRule) {
                 let result = await RuleHandler.addRule(data);
                 resolve('添加成功');
                 return;
             }
-            reject();
+            reject('添加失败，规则已存在');
         });
     },
     
     updateRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            let findRule: any = await RuleHandler.findRule(data.keywords);
+            let findRule: any = await RuleHandler.findRule(data.keyword);
             if (findRule) {
                 await RuleHandler.updateRule(findRule.id, data);
-                resolve('更新成功');
+                resolve(`规则更新成功`);
                 return;
             }
-            reject();
+            reject('规则更新失败');
         });
     },
 
     pauseRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
             console.log('[index.ts/57] pauseRule: ');
-            let keywords = Array.isArray(data.keywords) ? data.keywords[0] : data.keywords;
-            let result = await RuleHandler.pauseRule(keywords);
-            resolve(result);
+            let keyword = data.keyword;
+            let result: any = await RuleHandler.pauseRule(keyword);
+            resolve(`${result.keyword} 规则已暂停`);
         });
     },
 
     activeRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            let keywords = Array.isArray(data.keywords) ? data.keywords[0] : data.keywords;
-            let result = await RuleHandler.activeRule(keywords);
-            resolve(result);
+            let keyword = data.keyword;
+            let result: any = await RuleHandler.activeRule(keyword);
+            resolve(`${result.keyword} 规则已重新激活`);
         });
     },
 
     deleteRule(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            let findRule: any = await RuleHandler.findRule(data.keywords);
+            let findRule: any = await RuleHandler.findRule(data.keyword);
             if (findRule) {
                 RuleHandler.deleteRule(findRule.id);
                 resolve('删除成功');
                 return;
             }
-            reject();
+            reject('删除失败');
         });
     },
 
@@ -105,16 +106,13 @@ const handler: any = {
                 data,
                 reply: data.reply
             }).write();
-            resolve('添加成功');
+            resolve('添加记录成功');
         });
     },
 
     log(data: any) {
         return new Promise(async (resolve, reject) => {
-            const instance = await db.instance;
-            console.log('[index.ts/106] log ');
-            
-            instance.get(db.TB_LOG).push({
+            Logger.getInstance().push({
                 type: 'text',
                 createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
                 updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),

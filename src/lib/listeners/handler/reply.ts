@@ -4,14 +4,14 @@ import { MessageHandlerOptions } from './message';
 export default {
     async autoReply(data: MessageHandlerOptions) {
         return new Promise(async (resolve, reject) => {
-            console.log('[reply.ts/7] data: ', data);
-            console.log('[reply.ts/8] data.keywords: ', data.keywords);
-            const result: any = await RuleHandler.findRule(data.keywords);
+            console.log('[reply.ts/8] data.keywords: ', data.keyword);
+            
+            const result: any = await RuleHandler.findRule(data.keyword);
+
             console.log('[reply.ts/8] result.enable: ', result.enable);
-            console.log('[reply.ts/9] RuleEnableEnum.ACTIVE, RuleEnableEnum.REACTIVE: ', RuleEnableEnum.ACTIVE, RuleEnableEnum.REACTIVE);
-            console.log('[reply.ts/9] enable ', [RuleEnableEnum.ACTIVE, RuleEnableEnum.REACTIVE].includes(result.enable));
+
             if (![RuleEnableEnum.ACTIVE, RuleEnableEnum.REACTIVE].includes(result.enable)) {
-                reject();
+                reject('规则不存在或已失效');
                 return;
             }
             let replyMsg;

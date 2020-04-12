@@ -1,7 +1,7 @@
 [{
     "id": "1",
     "name": "",
-    "keywords": "test",
+    "keyword": "test",
     "enable": 1,
     "createTime": "",
     "updateTime": "",
@@ -10,7 +10,7 @@
     "scheduleTime": "",
     "allow": {
         "group": ["火线三兄弟"],
-        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+        "person": ["KingYo"]
     },
     "ignore": {
         "group": [],
@@ -22,7 +22,7 @@
 }, {
     "id": "2",
     "name": "",
-    "keywords": "addRule",
+    "keyword": "addRule",
     "enable": 1,
     "createTime": "",
     "updateTime": "",
@@ -31,7 +31,7 @@
     "scheduleTime": "",
     "allow": {
         "group": [],
-        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+        "person": ["KingYo"]
     },
     "ignore": {
         "group": [],
@@ -43,7 +43,7 @@
 }, {
     "id": "3",
     "name": "",
-    "keywords": "updateRule",
+    "keyword": "updateRule",
     "enable": 1,
     "createTime": "",
     "updateTime": "",
@@ -52,7 +52,7 @@
     "scheduleTime": "",
     "allow": {
         "group": [],
-        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+        "person": ["KingYo"]
     },
     "ignore": {
         "group": [],
@@ -64,7 +64,7 @@
 }, {
     "id": "4",
     "name": "",
-    "keywords": "deleteRule",
+    "keyword": "deleteRule",
     "enable": 1,
     "createTime": "",
     "updateTime": "",
@@ -73,7 +73,7 @@
     "scheduleTime": "",
     "allow": {
         "group": [],
-        "person": ["@2780dddb87c5a98901fe69cec96542f41ab59feefcedc30b004f63187205c0c"]
+        "person": ["KingYo"]
     },
     "ignore": {
         "group": [],
