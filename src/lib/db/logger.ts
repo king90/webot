@@ -2,7 +2,11 @@ import * as low from 'lowdb';
 import FileSync = require('lowdb/adapters/FileSync');
 import * as path from 'path';
 
-const TB_NAME = 'log';
+export enum LOGGER_TABLE {
+    LOG = 'log',
+    SCHEDULE = 'schedule'
+}
+const TB_NAME = LOGGER_TABLE.LOG;
 
 const STORE_FILE: string = path.join(process.cwd(), './.temp/' + TB_NAME + '.json');
 
@@ -18,7 +22,10 @@ for (let i = 0; i < tables.length; i++) {
 }
 
 export default {
-    getInstance() {
+    getInstance(name?: string) {
+        if (name) {
+            return db.get(name);
+        }
         return db.get(TB_NAME);
     }
 };

@@ -1,4 +1,4 @@
-import handler from '../lib/listeners/handler';
+import handler from '../lib/service';
 
 var test = async() => {
     // await handler.log({

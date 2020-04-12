@@ -1,10 +1,8 @@
 import { Message, Wechaty, Contact, FileBox, Room } from 'wechaty';
-import * as path from 'path';
-// import db from '../db';
 import RuleDB from '../db/rule';
-import handler from './handler';
-import MessageHandler, { MessageHandlerOptions } from './handler/message';
-import UserHandler from './handler/user';
+import service from '../service';
+import MessageHandler, { MessageHandlerOptions } from '../service/message';
+import UserService from '../service/user';
 
 import bot from '../../index';
 
@@ -35,7 +33,7 @@ async function onMessage(msg: Message) {
         // 记录user
         let contact: Contact | null = msg.from();
         if (contact) {
-            UserHandler.saveOrUpdate(contact.id, contact.name());
+            UserService.saveOrUpdate(contact.id, contact.name());
         }
         
         let ruleModel = await RuleDB.getInstance() as any;
@@ -106,7 +104,7 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
     const nickName = payload.name;
     let content = msg.text().trim(); // 消息内容  未省去不必要的麻烦，使用trim()去除前后空格
     
-    await handler.log({
+    await service.log({
         from: {
             id: contact.id,
             name: nickName
@@ -130,7 +128,7 @@ async function onPeopleMessage(newMsg: MessageHandlerOptions, rule: any) {
 
     // TODO: 未来可扩展到多个任务
     let currentHandle = rule.handler[0] || {};
-    let execute = handler.get(currentHandle.name);
+    let execute = service.getService(currentHandle.name);
     console.log('[message.ts/120] execute: ', execute);
     if (execute) {
         let result: any;
@@ -161,7 +159,7 @@ async function onWebRoomMessage(newMsg: MessageHandlerOptions, rule: any) {
     let content = msg.text().trim(); // 消息内容  未省去不必要的麻烦，使用trim()去除前后空格
 
     const roomPayload = (room as any).payload;
-    await handler.log({
+    await service.log({
         from: {
             id: contact.id,
             name: payload.name
@@ -185,11 +183,10 @@ async function onWebRoomMessage(newMsg: MessageHandlerOptions, rule: any) {
         return;
     }
 
-
     const nickName = payload.name;
     // TODO: 未来可扩展到多个任务
     let currentHandle: any = rule.handler[0] || {};
-    let execute = handler.get(currentHandle.name);
+    let execute = service.getService(currentHandle.name);
     console.log('[message.ts/168] execute: ', execute);
     if (execute) {
         let result: any;

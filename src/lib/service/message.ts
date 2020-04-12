@@ -1,6 +1,6 @@
-import * as dayjs from 'dayjs';
-import db from '../../db';
+import db from '../db';
 import { Message, Contact } from 'wechaty';
+import Schedule from './schedule';
 
 const TABLE_RULE = db.TB_RULE;
 
@@ -37,8 +37,15 @@ export interface MessageHandlerOptions {
     ruleName?: string,
     keyword: string,
     enable?: number,
-    enableSchedule?: boolean,
-    scheduleTime?: string,
+    schedule?: {
+        name?: string,
+        enable?: boolean,
+        time?: string,
+        replyTo?: {
+            group?: Array<string>,
+            person?: Array<string>
+        }
+    },
     allow?: {
         group?: Array<string>,
         person?: Array<string>
@@ -66,6 +73,12 @@ const trim = (txt: any) => {
 const isMultiLineMsg = (text: string) => {
     return /.+<br\/>.*/.test(text);
 };
+
+/**
+ * 解析多行数据
+ * @param text string
+ * @param msg Message
+ */
 const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | undefined => {
     
     let textList = text.split('<br/>');
@@ -78,7 +91,7 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
     let result: MessageHandlerOptions = {
         keyword: '',
         mentionSelf: false,
-        enableSchedule: false,
+        schedule: {},
         enable: RuleEnableEnum.ACTIVE,
         allow: {
             person: allowPerson ? [allowPerson] : []
@@ -104,9 +117,13 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
             if (['关键字', 'keyword'].includes(matchKey)) {
                 result.keyword = matchVal === undefined ? '' : matchVal;
             } else if (matchKey === '是否定时') {
-                result.enableSchedule = matchVal === '是' ? true : false;
+                if (result.schedule) {
+                    result.schedule.enable = matchVal === '是' ? true : false;
+                }
             } else if (matchKey === '定时时间') {
-                result.scheduleTime = matchVal;
+                if (result.schedule && matchVal) {
+                    result.schedule.time = Schedule.format(matchVal);
+                }
             } else if (matchKey === '允许群') {
                 result.allow = result.allow || {};
                 result.allow.group = matchVal ? matchVal.split(/[,，]/) : undefined;
@@ -114,6 +131,16 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
                 result.allow = result.allow || {};
                 if (matchVal) {
                     result.allow.person?.concat(matchVal.split(/[,，]/));
+                }
+            } else if (matchKey === '定时回复人') {
+                if (result.schedule && matchVal) {
+                    result.schedule.replyTo = result.schedule.replyTo || {};
+                    result.schedule.replyTo.person = matchVal.split(/[,，]/);
+                }
+            } else if (matchKey === '定时回复群') {
+                if (result.schedule && matchVal) {
+                    result.schedule.replyTo = result.schedule.replyTo || {};
+                    result.schedule.replyTo.group = matchVal.split(/[,，]/);
                 }
             } else if (['handler', '处理'].includes(matchKey)) {
                 console.log('[message.ts/115] matchVal: ', matchVal);
@@ -135,6 +162,11 @@ const parseMultiLineMsg = (text: string, msg: Message): MessageHandlerOptions | 
     return !result.keyword ? undefined : result;
 };
 
+/**
+ * 解析单行数据
+ * @param text 
+ * @param msg 
+ */
 const parseSingleLineMsg = (text: string, msg: Message): MessageHandlerOptions | undefined => {
     let textList = text.split(/\s+/);
     console.log('[message.ts/138] textList: ', textList);
@@ -165,6 +197,7 @@ export default {
             return undefined;
         }
 
+        // 群消息时，判断是否 @自己
         let reg = new RegExp(`^@${selfName}\\s+`);
         let mentionSelf: boolean = false;
         if (reg.test(text)) {
@@ -172,6 +205,7 @@ export default {
             text = text.replace(reg, '');
         }
         
+        // 处理单行和多行消息
         let result;
         if (isMultiLineMsg(text)) {
             console.log('[message.ts/163] multi line msg: ');
@@ -180,6 +214,8 @@ export default {
             console.log('[message.ts/163] signle msg: ');
             result = parseSingleLineMsg(text, msg);
         }
+
+        // 针对 @自己 的做特殊标识
         if (result) {
             result.mentionSelf = mentionSelf;
         }

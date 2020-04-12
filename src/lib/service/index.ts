@@ -1,12 +1,10 @@
-import * as dayjs from 'dayjs';
-import db from '../../db';
 import RuleHandler from './rule';
 import ReplyHandler from './reply';
 import { MessageHandlerOptions } from './message';
-import Logger from '../../db/logger';
+import LoggerService from './logger';
 
 const handler: any = {
-    get(name: string) {
+    getService(name: string) {
         let mapping: any = {
             'add rule': 'addRule',
             'add-rule': 'addRule',
@@ -88,39 +86,9 @@ const handler: any = {
         });
     },
 
-    addRelease(data: any) {
-        data.type = 'release';
-        return handler.addRecord(data);
-    },
-
-    addRecord(data: any) {
-        return new Promise(async (resolve, reject) => {
-            const instance = await db.instance;
-            instance.get(db.TB_RECORD).push({
-                type: data.type,
-                createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                createBy: data.from,
-                from: data.from,
-                room: data.room,
-                data,
-                reply: data.reply
-            }).write();
-            resolve('添加记录成功');
-        });
-    },
-
     log(data: any) {
         return new Promise(async (resolve, reject) => {
-            Logger.getInstance().push({
-                type: 'text',
-                createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                updateTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-                from: data.from,
-                room: data.room,
-                data: data.data
-            }).write();
-            resolve('日志添加成功');
+            await LoggerService.log(data);
         });
     }
 };
