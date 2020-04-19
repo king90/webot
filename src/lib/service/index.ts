@@ -89,6 +89,7 @@ const handler: any = {
     log(data: any) {
         return new Promise(async (resolve, reject) => {
             await LoggerService.log(data);
+            resolve();
         });
     }
 };
